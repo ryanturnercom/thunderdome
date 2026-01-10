@@ -29,7 +29,7 @@ export function usePrompts() {
     setPrompts(newPrompts);
   }, []);
 
-  const isValid = prompts.systemPrompt.trim().length > 0 && prompts.userPrompt.trim().length > 0;
+  const isValid = prompts.userPrompt.trim().length > 0;
 
   return {
     prompts,
