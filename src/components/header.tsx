@@ -34,9 +34,9 @@ export function Header() {
           <Image
             src="/logo.png"
             alt="Turner's Thunderdome"
-            width={400}
-            height={100}
-            className="h-20 w-auto"
+            width={800}
+            height={200}
+            className="h-40 w-auto"
             priority
           />
         </div>
