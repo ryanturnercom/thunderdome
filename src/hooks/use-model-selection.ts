@@ -24,6 +24,10 @@ export function useModelSelection() {
     setSelectedModels([]);
   }, []);
 
+  const loadModels = useCallback((models: SelectedModel[]) => {
+    setSelectedModels(models.sort((a, b) => a.slot - b.slot));
+  }, []);
+
   const getModelForSlot = useCallback(
     (slot: 1 | 2 | 3) => {
       const selected = selectedModels.find((m) => m.slot === slot);
@@ -40,6 +44,7 @@ export function useModelSelection() {
     selectModel,
     clearModel,
     clearAllModels,
+    loadModels,
     getModelForSlot,
     hasModels,
   };

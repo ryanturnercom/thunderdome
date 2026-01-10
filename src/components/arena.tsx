@@ -7,8 +7,11 @@ import { PromptComposer } from "./prompt-composer";
 import { ModelSelectorGrid } from "./model-selector";
 import { ResponseGrid } from "./response-grid";
 import { EvaluatorPanel } from "./evaluator-panel";
+import { SaveConfigDialog } from "./save-config-dialog";
+import { LoadConfigDialog } from "./load-config-dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Play, RotateCcw } from "lucide-react";
+import { SelectedModel } from "@/types/models";
 
 export function Arena() {
   const {
@@ -23,6 +26,7 @@ export function Arena() {
     selectedModels,
     selectModel,
     clearModel,
+    loadModels,
     getModelForSlot,
     hasModels,
   } = useModelSelection();
@@ -52,6 +56,17 @@ export function Arena() {
     reset();
   };
 
+  const handleLoadConfig = (config: {
+    systemPrompt: string;
+    userPrompt: string;
+    models: SelectedModel[];
+  }) => {
+    setSystemPrompt(config.systemPrompt);
+    setUserPrompt(config.userPrompt);
+    loadModels(config.models);
+    reset(); // Clear any previous responses
+  };
+
   // Helper to get modelId for a slot
   const getModelIdForSlot = (slot: 1 | 2 | 3): string | null => {
     const model = getModelForSlot(slot);
@@ -67,6 +82,17 @@ export function Arena() {
         <p className="text-muted-foreground">
           Test your prompts against multiple LLMs in parallel
         </p>
+      </div>
+
+      {/* Config management buttons */}
+      <div className="flex justify-center gap-4">
+        <LoadConfigDialog onLoad={handleLoadConfig} disabled={isExecuting} />
+        <SaveConfigDialog
+          systemPrompt={prompts.systemPrompt}
+          userPrompt={prompts.userPrompt}
+          models={selectedModels}
+          disabled={!isValid || isExecuting}
+        />
       </div>
 
       <PromptComposer
