@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { LogoutButton } from "./logout-button";
 
 export function Header() {
   return (
@@ -15,7 +16,7 @@ export function Header() {
           />
         </div>
         <div className="flex items-center gap-4">
-          {/* Logout button will be added in Epic 2 */}
+          <LogoutButton />
         </div>
       </div>
     </header>
