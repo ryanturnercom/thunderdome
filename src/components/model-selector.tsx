@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -30,6 +31,9 @@ const providerLabels: Record<Provider, string> = {
   google: "Google",
 };
 
+// Get unique providers from available models
+const providers = [...new Set(AVAILABLE_MODELS.map((m) => m.provider))] as Provider[];
+
 export function ModelSelector({
   slot,
   selectedModelId,
@@ -37,17 +41,41 @@ export function ModelSelector({
 }: ModelSelectorProps) {
   const selectedModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
 
-  // Group models by provider
-  const modelsByProvider = AVAILABLE_MODELS.reduce(
-    (acc, model) => {
-      if (!acc[model.provider]) {
-        acc[model.provider] = [];
-      }
-      acc[model.provider].push(model);
-      return acc;
-    },
-    {} as Record<Provider, typeof AVAILABLE_MODELS>
+  // Track selected provider separately
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(
+    selectedModel?.provider || null
   );
+
+  // Update provider when model changes externally (e.g., loading a config)
+  useEffect(() => {
+    if (selectedModel) {
+      setSelectedProvider(selectedModel.provider);
+    }
+  }, [selectedModel]);
+
+  // Get models for the selected provider
+  const modelsForProvider = selectedProvider
+    ? AVAILABLE_MODELS.filter((m) => m.provider === selectedProvider)
+    : [];
+
+  const handleProviderChange = (provider: string) => {
+    setSelectedProvider(provider as Provider);
+    // Clear the model selection when provider changes
+    if (selectedModelId) {
+      const currentModel = AVAILABLE_MODELS.find((m) => m.id === selectedModelId);
+      if (currentModel?.provider !== provider) {
+        // Select the first model of the new provider by default
+        const firstModel = AVAILABLE_MODELS.find((m) => m.provider === provider);
+        if (firstModel) {
+          onSelect(firstModel.id);
+        }
+      }
+    }
+  };
+
+  const handleModelChange = (modelId: string) => {
+    onSelect(modelId);
+  };
 
   return (
     <Card className="thunderdome-panel">
@@ -61,36 +89,58 @@ export function ModelSelector({
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <Select
-          value={selectedModelId || ""}
-          onValueChange={(value) => onSelect(value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a model..." />
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.keys(modelsByProvider) as Provider[]).map((provider) => (
-              <div key={provider}>
-                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                  {providerLabels[provider]}
-                </div>
-                {modelsByProvider[provider].map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
-                    <div className="flex flex-col">
-                      <span>{model.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {model.description}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </div>
-            ))}
-          </SelectContent>
-        </Select>
+      <CardContent className="space-y-3">
+        {/* Provider Selection */}
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">Provider</label>
+          <Select
+            value={selectedProvider || ""}
+            onValueChange={handleProviderChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select provider..." />
+            </SelectTrigger>
+            <SelectContent>
+              {providers.map((provider) => (
+                <SelectItem key={provider} value={provider}>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${providerColors[provider]}`} />
+                    {providerLabels[provider]}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Model Selection */}
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">Model</label>
+          <Select
+            value={selectedModelId || ""}
+            onValueChange={handleModelChange}
+            disabled={!selectedProvider}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={selectedProvider ? "Select model..." : "Select provider first"} />
+            </SelectTrigger>
+            <SelectContent>
+              {modelsForProvider.map((model) => (
+                <SelectItem key={model.id} value={model.id}>
+                  <div className="flex flex-col">
+                    <span>{model.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {model.description}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {selectedModel && (
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Context: {selectedModel.contextWindow.toLocaleString()} tokens
           </p>
         )}
