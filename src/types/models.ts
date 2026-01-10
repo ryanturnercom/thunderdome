@@ -9,70 +9,63 @@ export interface ModelDefinition {
 }
 
 export const AVAILABLE_MODELS: ModelDefinition[] = [
-  // OpenAI Models (2025-2026)
+  // OpenAI Models
   {
-    id: "gpt-5.2",
-    name: "GPT-5.2",
+    id: "gpt-4o",
+    name: "GPT-4o",
     provider: "openai",
-    contextWindow: 400000,
-    description: "Latest flagship - coding & agentic tasks",
+    contextWindow: 128000,
+    description: "Most capable OpenAI model",
   },
   {
-    id: "gpt-5-2025-08-07",
-    name: "GPT-5",
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
     provider: "openai",
-    contextWindow: 200000,
-    description: "GPT-5 base model",
+    contextWindow: 128000,
+    description: "Fast and cost-effective",
   },
   {
-    id: "gpt-5-mini-2025-08-07",
-    name: "GPT-5 Mini",
+    id: "gpt-4-turbo",
+    name: "GPT-4 Turbo",
     provider: "openai",
-    contextWindow: 200000,
-    description: "Smaller, faster GPT-5 variant",
+    contextWindow: 128000,
+    description: "Previous generation high-capability",
   },
   {
-    id: "gpt-4.1-2025-04-14",
-    name: "GPT-4.1",
-    provider: "openai",
-    contextWindow: 1000000,
-    description: "1M context window, great for long docs",
-  },
-  {
-    id: "o4-mini-2025-04-16",
-    name: "o4-mini",
-    provider: "openai",
-    contextWindow: 200000,
-    description: "Fast reasoning model - math, coding, visual",
-  },
-  {
-    id: "o3-2025-04-16",
-    name: "o3",
+    id: "o1",
+    name: "o1",
     provider: "openai",
     contextWindow: 200000,
     description: "Advanced reasoning model",
   },
-  // Anthropic Models (2025-2026)
+  {
+    id: "o1-mini",
+    name: "o1-mini",
+    provider: "openai",
+    contextWindow: 128000,
+    description: "Fast reasoning model",
+  },
+  // Anthropic Models (from official docs)
+  {
+    id: "claude-sonnet-4-5-20250929",
+    name: "Claude Sonnet 4.5",
+    provider: "anthropic",
+    contextWindow: 200000,
+    description: "Best balance of intelligence & speed",
+  },
+  {
+    id: "claude-haiku-4-5-20251001",
+    name: "Claude Haiku 4.5",
+    provider: "anthropic",
+    contextWindow: 200000,
+    description: "Fastest model, near-frontier intelligence",
+  },
   {
     id: "claude-opus-4-5-20251101",
     name: "Claude Opus 4.5",
     provider: "anthropic",
     contextWindow: 200000,
-    description: "Latest flagship - best for coding & agents",
-  },
-  {
-    id: "claude-sonnet-4-5-20250929",
-    name: "Claude Sonnet 4.5",
-    provider: "anthropic",
-    contextWindow: 1000000,
-    description: "Fast & capable - 1M context with beta header",
-  },
-  {
-    id: "claude-haiku-4-5-20251015",
-    name: "Claude Haiku 4.5",
-    provider: "anthropic",
-    contextWindow: 200000,
-    description: "Small & fast - 2x speed at 1/3 cost of Sonnet",
+    description: "Maximum intelligence premium model",
   },
   {
     id: "claude-sonnet-4-20250514",
@@ -81,34 +74,34 @@ export const AVAILABLE_MODELS: ModelDefinition[] = [
     contextWindow: 200000,
     description: "Previous gen Sonnet - still excellent",
   },
-  // Google Models (2025-2026)
+  // Google Gemini Models (from official docs)
   {
-    id: "gemini-3-pro-preview",
-    name: "Gemini 3 Pro",
-    provider: "google",
-    contextWindow: 1000000,
-    description: "Latest reasoning model - agentic & coding",
-  },
-  {
-    id: "gemini-3-flash-preview",
-    name: "Gemini 3 Flash",
-    provider: "google",
-    contextWindow: 1000000,
-    description: "Pro intelligence at Flash speed & price",
-  },
-  {
-    id: "gemini-2.5-pro-preview-06-05",
-    name: "Gemini 2.5 Pro",
-    provider: "google",
-    contextWindow: 1000000,
-    description: "Previous gen Pro - stable & reliable",
-  },
-  {
-    id: "gemini-2.5-flash-preview-05-20",
+    id: "gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
     provider: "google",
     contextWindow: 1000000,
-    description: "Fast & efficient for quick tasks",
+    description: "Fast & efficient (stable)",
+  },
+  {
+    id: "gemini-2.5-pro",
+    name: "Gemini 2.5 Pro",
+    provider: "google",
+    contextWindow: 1000000,
+    description: "Most capable Gemini (stable)",
+  },
+  {
+    id: "gemini-2.0-flash",
+    name: "Gemini 2.0 Flash",
+    provider: "google",
+    contextWindow: 1000000,
+    description: "Previous gen Flash",
+  },
+  {
+    id: "gemini-1.5-pro",
+    name: "Gemini 1.5 Pro",
+    provider: "google",
+    contextWindow: 2000000,
+    description: "2M context window",
   },
 ];
 
