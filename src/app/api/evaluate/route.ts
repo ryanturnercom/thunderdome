@@ -92,7 +92,7 @@ Provide a comprehensive evaluation that includes:
 Be objective and specific in your analysis. Reference specific parts of each response when making comparisons.`;
 
     const generativeModel = client.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-3-flash-preview",
     });
 
     const result = await generativeModel.generateContent(evaluationPrompt);
