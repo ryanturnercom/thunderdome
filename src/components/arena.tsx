@@ -1,8 +1,14 @@
 "use client";
 
 import { usePrompts } from "@/hooks/use-prompts";
+import { useModelSelection } from "@/hooks/use-model-selection";
+import { useExecution } from "@/hooks/use-execution";
 import { PromptComposer } from "./prompt-composer";
+import { ModelSelectorGrid } from "./model-selector";
+import { ResponseGrid } from "./response-grid";
+import { EvaluatorPanel } from "./evaluator-panel";
 import { Button } from "@/components/ui/button";
+import { Loader2, Play, RotateCcw } from "lucide-react";
 
 export function Arena() {
   const {
@@ -12,6 +18,45 @@ export function Arena() {
     clearPrompts,
     isValid,
   } = usePrompts();
+
+  const {
+    selectedModels,
+    selectModel,
+    clearModel,
+    getModelForSlot,
+    hasModels,
+  } = useModelSelection();
+
+  const {
+    isExecuting,
+    responses,
+    execute,
+    reset,
+    getResponseForModel,
+    allComplete,
+    hasResponses,
+  } = useExecution();
+
+  const canExecute = isValid && hasModels && !isExecuting;
+
+  const handleExecute = () => {
+    execute(prompts.systemPrompt, prompts.userPrompt, selectedModels);
+  };
+
+  const handleReset = () => {
+    reset();
+  };
+
+  const handleClearAll = () => {
+    clearPrompts();
+    reset();
+  };
+
+  // Helper to get modelId for a slot
+  const getModelIdForSlot = (slot: 1 | 2 | 3): string | null => {
+    const model = getModelForSlot(slot);
+    return model?.id || null;
+  };
 
   return (
     <div className="space-y-8">
@@ -30,24 +75,64 @@ export function Arena() {
         onUserPromptChange={setUserPrompt}
       />
 
+      <ModelSelectorGrid
+        getModelIdForSlot={getModelIdForSlot}
+        onSelectModel={selectModel}
+        onClearModel={clearModel}
+      />
+
       <div className="flex justify-center gap-4">
         <Button
           variant="outline"
-          onClick={clearPrompts}
-          disabled={!prompts.systemPrompt && !prompts.userPrompt}
+          onClick={handleClearAll}
+          disabled={isExecuting}
         >
           Clear All
         </Button>
+        {hasResponses && (
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            disabled={isExecuting}
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset Responses
+          </Button>
+        )}
         <Button
-          className="px-8"
-          disabled={!isValid}
+          className="px-8 thunderdome-button"
+          disabled={!canExecute}
+          onClick={handleExecute}
         >
-          EXECUTE
+          {isExecuting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              EXECUTING...
+            </>
+          ) : (
+            <>
+              <Play className="mr-2 h-4 w-4" />
+              EXECUTE
+            </>
+          )}
         </Button>
       </div>
 
-      {/* Model Selector will be added in Epic 4 */}
-      {/* Response Grid will be added in Epic 5 */}
+      {hasResponses && (
+        <>
+          <ResponseGrid
+            selectedModels={selectedModels}
+            getResponseForModel={getResponseForModel}
+          />
+
+          <EvaluatorPanel
+            responses={responses}
+            systemPrompt={prompts.systemPrompt}
+            userPrompt={prompts.userPrompt}
+            allComplete={allComplete}
+          />
+        </>
+      )}
     </div>
   );
 }
