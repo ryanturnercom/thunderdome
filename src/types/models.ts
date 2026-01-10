@@ -76,6 +76,20 @@ export const AVAILABLE_MODELS: ModelDefinition[] = [
   },
   // Google Gemini Models (from official docs)
   {
+    id: "gemini-3.0-flash",
+    name: "Gemini 3.0 Flash",
+    provider: "google",
+    contextWindow: 1000000,
+    description: "Latest Flash - fast & capable",
+  },
+  {
+    id: "gemini-3.0-pro",
+    name: "Gemini 3.0 Pro",
+    provider: "google",
+    contextWindow: 1000000,
+    description: "Latest Pro - most capable",
+  },
+  {
     id: "gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
     provider: "google",
