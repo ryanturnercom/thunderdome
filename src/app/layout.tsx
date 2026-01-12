@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/header";
@@ -49,7 +50,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ArenaProvider>
-            <Header />
+            <Suspense fallback={<div className="h-24" />}>
+              <Header />
+            </Suspense>
             <div className="h-24" /> {/* Spacer for fixed header */}
             <MainLogo />
             <main className="flex-1 p-6">

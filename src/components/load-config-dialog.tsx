@@ -10,26 +10,38 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FolderOpen, Loader2, Trash2 } from "lucide-react";
-import { ConfigListItem, ThunderdomeConfig } from "@/types/config";
+import { FolderOpen, Loader2, Trash2, Link, Check } from "lucide-react";
+import { ConfigListItem, ThunderdomeConfig, SavedResponse } from "@/types/config";
 import { SelectedModel } from "@/types/models";
 import { toast } from "sonner";
 
 interface LoadConfigDialogProps {
   onLoad: (config: {
+    id: string;
     systemPrompt: string;
     userPrompt: string;
     models: SelectedModel[];
+    responses?: SavedResponse[];
+    evaluation?: string;
   }) => void;
   disabled?: boolean;
+  autoOpen?: boolean;
 }
 
-export function LoadConfigDialog({ onLoad, disabled }: LoadConfigDialogProps) {
+export function LoadConfigDialog({ onLoad, disabled, autoOpen }: LoadConfigDialogProps) {
   const [open, setOpen] = useState(false);
   const [configs, setConfigs] = useState<ConfigListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Auto-open for guests
+  useEffect(() => {
+    if (autoOpen) {
+      setOpen(true);
+    }
+  }, [autoOpen]);
 
   const fetchConfigs = async () => {
     setIsLoading(true);
@@ -65,9 +77,12 @@ export function LoadConfigDialog({ onLoad, disabled }: LoadConfigDialogProps) {
       const config: ThunderdomeConfig = await response.json();
 
       onLoad({
+        id: config.id,
         systemPrompt: config.systemPrompt,
         userPrompt: config.userPrompt,
         models: config.models,
+        responses: config.responses,
+        evaluation: config.evaluation,
       });
 
       toast.success(`Loaded "${config.name}"`);
@@ -78,6 +93,18 @@ export function LoadConfigDialog({ onLoad, disabled }: LoadConfigDialogProps) {
       );
     } finally {
       setLoadingId(null);
+    }
+  };
+
+  const handleCopyLink = async (id: string) => {
+    const url = `${window.location.origin}?config=${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      toast.success("Link copied to clipboard!");
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      toast.error("Failed to copy link");
     }
   };
 
@@ -164,12 +191,25 @@ export function LoadConfigDialog({ onLoad, disabled }: LoadConfigDialogProps) {
                       Updated {formatDate(config.updatedAt)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-1 ml-4">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCopyLink(config.id)}
+                      title="Copy link"
+                    >
+                      {copiedId === config.id ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Link className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDelete(config.id, config.name)}
                       disabled={deletingId === config.id}
+                      title="Delete"
                     >
                       {deletingId === config.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

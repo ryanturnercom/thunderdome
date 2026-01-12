@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { useArena } from "@/contexts/arena-context";
+import { useCallback, useRef } from "react";
+import { useArena, ModelResponse } from "@/contexts/arena-context";
+import { useAuth } from "@/contexts/auth-context";
 import { PromptComposer } from "./prompt-composer";
 import { ModelSelectorGrid } from "./model-selector";
 import { ResponseGrid } from "./response-grid";
@@ -9,21 +10,6 @@ import { EvaluatorPanel } from "./evaluator-panel";
 import { Button } from "@/components/ui/button";
 import { Loader2, Play, RotateCcw } from "lucide-react";
 import { StreamChunk } from "@/types/models";
-
-interface ModelResponse {
-  modelId: string;
-  content: string;
-  isStreaming: boolean;
-  isComplete: boolean;
-  isError: boolean;
-  error?: string;
-  usage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
-  latencyMs?: number;
-}
 
 export function Arena() {
   const {
@@ -39,25 +25,29 @@ export function Arena() {
     hasModels,
     isExecuting,
     setIsExecuting,
+    responses,
+    setResponses,
+    clearResponses,
+    hasResponses,
+    allComplete,
+    setEvaluation,
   } = useArena();
 
-  const [responses, setResponses] = useState<Map<string, ModelResponse>>(
-    new Map()
-  );
   const abortControllerRef = useRef<AbortController | null>(null);
+  const { isGuest } = useAuth();
 
-  const canExecute = isValid && hasModels && !isExecuting;
-  const hasResponses = responses.size > 0;
-  const allComplete = Array.from(responses.values()).every(
-    (r) => r.isComplete || r.isError
-  );
+  const canExecute = isValid && hasModels && !isExecuting && !isGuest;
 
   const execute = useCallback(async () => {
+    // Play sound on execute
+    const audio = new Audio("/welcome.wav");
+    audio.play().catch(() => {});
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
     setIsExecuting(true);
+    setEvaluation(null); // Clear previous evaluation
     const initialResponses = new Map<string, ModelResponse>();
     for (const model of selectedModels) {
       initialResponses.set(model.modelId, {
@@ -158,7 +148,7 @@ export function Arena() {
       setIsExecuting(false);
       abortControllerRef.current = null;
     }
-  }, [prompts, selectedModels, setIsExecuting]);
+  }, [prompts, selectedModels, setIsExecuting, setResponses, setEvaluation]);
 
   const handleReset = () => {
     if (abortControllerRef.current) {
@@ -166,7 +156,8 @@ export function Arena() {
       abortControllerRef.current = null;
     }
     setIsExecuting(false);
-    setResponses(new Map());
+    clearResponses();
+    setEvaluation(null);
   };
 
   const handleClearAll = () => {

@@ -73,6 +73,8 @@ export async function saveConfig(request: SaveConfigRequest): Promise<Thunderdom
     systemPrompt: request.systemPrompt,
     userPrompt: request.userPrompt,
     models: request.models,
+    responses: request.responses,
+    evaluation: request.evaluation,
     createdAt: now,
     updatedAt: now,
   };
@@ -101,6 +103,8 @@ export async function updateConfig(
     systemPrompt: request.systemPrompt,
     userPrompt: request.userPrompt,
     models: request.models,
+    responses: request.responses,
+    evaluation: request.evaluation,
     updatedAt: new Date().toISOString(),
   };
 

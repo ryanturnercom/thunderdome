@@ -8,10 +8,26 @@ import {
   ReactNode,
 } from "react";
 import { SelectedModel, AVAILABLE_MODELS } from "@/types/models";
+import { SavedResponse } from "@/types/config";
 
 interface Prompts {
   systemPrompt: string;
   userPrompt: string;
+}
+
+export interface ModelResponse {
+  modelId: string;
+  content: string;
+  isStreaming: boolean;
+  isComplete: boolean;
+  isError: boolean;
+  error?: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  latencyMs?: number;
 }
 
 interface ArenaContextType {
@@ -33,6 +49,19 @@ interface ArenaContextType {
   // Execution state (for disabling buttons)
   isExecuting: boolean;
   setIsExecuting: (value: boolean) => void;
+
+  // Responses
+  responses: Map<string, ModelResponse>;
+  setResponses: (responses: Map<string, ModelResponse> | ((prev: Map<string, ModelResponse>) => Map<string, ModelResponse>)) => void;
+  updateResponse: (modelId: string, update: Partial<ModelResponse>) => void;
+  clearResponses: () => void;
+  loadResponses: (savedResponses: SavedResponse[]) => void;
+  hasResponses: boolean;
+  allComplete: boolean;
+
+  // Evaluation
+  evaluation: string | null;
+  setEvaluation: (evaluation: string | null) => void;
 }
 
 const ArenaContext = createContext<ArenaContextType | null>(null);
@@ -93,6 +122,63 @@ export function ArenaProvider({ children }: { children: ReactNode }) {
   // Execution state
   const [isExecuting, setIsExecuting] = useState(false);
 
+  // Responses state
+  const [responses, setResponsesState] = useState<Map<string, ModelResponse>>(
+    new Map()
+  );
+
+  const setResponses = useCallback((newResponses: Map<string, ModelResponse> | ((prev: Map<string, ModelResponse>) => Map<string, ModelResponse>)) => {
+    if (typeof newResponses === "function") {
+      setResponsesState(newResponses);
+    } else {
+      setResponsesState(newResponses);
+    }
+  }, []);
+
+  const updateResponse = useCallback((modelId: string, update: Partial<ModelResponse>) => {
+    setResponsesState((prev) => {
+      const newResponses = new Map(prev);
+      const existing = newResponses.get(modelId);
+      if (existing) {
+        newResponses.set(modelId, { ...existing, ...update });
+      }
+      return newResponses;
+    });
+  }, []);
+
+  const clearResponses = useCallback(() => {
+    setResponsesState(new Map());
+  }, []);
+
+  const loadResponses = useCallback((savedResponses: SavedResponse[]) => {
+    const newResponses = new Map<string, ModelResponse>();
+    for (const saved of savedResponses) {
+      newResponses.set(saved.modelId, {
+        modelId: saved.modelId,
+        content: saved.content,
+        isStreaming: false,
+        isComplete: saved.isComplete,
+        isError: saved.isError,
+        error: saved.error,
+        usage: saved.usage,
+        latencyMs: saved.latencyMs,
+      });
+    }
+    if (typeof newResponses === "function") {
+      setResponsesState(newResponses);
+    } else {
+      setResponsesState(newResponses);
+    }
+  }, []);
+
+  const hasResponses = responses.size > 0;
+  const allComplete = Array.from(responses.values()).every(
+    (r) => r.isComplete || r.isError
+  );
+
+  // Evaluation state
+  const [evaluation, setEvaluation] = useState<string | null>(null);
+
   return (
     <ArenaContext.Provider
       value={{
@@ -109,6 +195,15 @@ export function ArenaProvider({ children }: { children: ReactNode }) {
         hasModels,
         isExecuting,
         setIsExecuting,
+        responses,
+        setResponses,
+        updateResponse,
+        clearResponses,
+        loadResponses,
+        hasResponses,
+        allComplete,
+        evaluation,
+        setEvaluation,
       }}
     >
       {children}

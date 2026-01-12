@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const { systemPrompt, userPrompt, models } = body;
+  const { systemPrompt = "", userPrompt, models } = body;
 
-  if (!systemPrompt || !userPrompt || !models || models.length === 0) {
+  if (!userPrompt || !models || models.length === 0) {
     return new Response("Missing required fields", { status: 400 });
   }
 
@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
                 model: selectedModel.modelId,
                 systemPrompt,
                 userPrompt,
+                maxTokens: modelDef.maxOutputTokens,
                 onChunk,
                 onDone,
                 onError,
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
                 model: selectedModel.modelId,
                 systemPrompt,
                 userPrompt,
+                maxTokens: modelDef.maxOutputTokens,
                 onChunk,
                 onDone,
                 onError,
@@ -116,6 +118,7 @@ export async function POST(request: NextRequest) {
                 model: selectedModel.modelId,
                 systemPrompt,
                 userPrompt,
+                maxTokens: modelDef.maxOutputTokens,
                 onChunk,
                 onDone,
                 onError,

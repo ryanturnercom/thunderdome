@@ -21,6 +21,7 @@ export interface AnthropicStreamOptions {
   model: string;
   systemPrompt: string;
   userPrompt: string;
+  maxTokens: number | null; // null uses default of 8192
   onChunk: (content: string) => void;
   onDone: (usage: { promptTokens: number; completionTokens: number; totalTokens: number }) => void;
   onError: (error: Error) => void;
@@ -30,6 +31,7 @@ export async function streamAnthropicResponse({
   model,
   systemPrompt,
   userPrompt,
+  maxTokens,
   onChunk,
   onDone,
   onError,
@@ -43,8 +45,8 @@ export async function streamAnthropicResponse({
   try {
     const stream = await client.messages.stream({
       model,
-      max_tokens: 8192,
-      system: systemPrompt,
+      max_tokens: maxTokens ?? 8192, // Anthropic requires max_tokens
+      ...(systemPrompt && { system: systemPrompt }),
       messages: [{ role: "user", content: userPrompt }],
     });
 

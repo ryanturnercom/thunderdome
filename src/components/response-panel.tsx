@@ -1,10 +1,12 @@
 "use client";
 
+import { useRef, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AVAILABLE_MODELS, Provider } from "@/types/models";
-import { ModelResponse } from "@/hooks/use-execution";
-import { Loader2 } from "lucide-react";
+import { ModelResponse } from "@/contexts/arena-context";
+import { Loader2, ArrowUp } from "lucide-react";
 
 interface ResponsePanelProps {
   modelId: string;
@@ -26,6 +28,28 @@ const providerLabels: Record<Provider, string> = {
 
 export function ResponsePanel({ modelId, response, slot }: ResponsePanelProps) {
   const model = AVAILABLE_MODELS.find((m) => m.id === modelId);
+  const scrollRef = useRef<HTMLPreElement>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  // Auto-scroll to bottom as content streams in
+  useEffect(() => {
+    if (scrollRef.current && response?.isStreaming) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [response?.content, response?.isStreaming]);
+
+  // Show back to top button when scrolled down
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      setShowBackToTop(scrollRef.current.scrollTop > 100);
+    }
+  };
+
+  const scrollToTop = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   if (!model) {
     return (
@@ -71,14 +95,29 @@ export function ResponsePanel({ modelId, response, slot }: ResponsePanelProps) {
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-auto">
-              <pre className="whitespace-pre-wrap text-sm font-mono bg-muted/50 p-3 rounded-md min-h-[200px]">
+            <div className="relative flex-1">
+              <pre 
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="whitespace-pre-wrap text-sm font-mono bg-muted/50 p-3 rounded-md h-[500px] overflow-y-auto"
+              >
                 {response.content || (
                   <span className="text-muted-foreground">
                     Waiting for response...
                   </span>
                 )}
               </pre>
+              {showBackToTop && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="absolute bottom-3 right-3 shadow-lg"
+                  onClick={scrollToTop}
+                >
+                  <ArrowUp className="h-4 w-4 mr-1" />
+                  Top
+                </Button>
+              )}
             </div>
             {response.isComplete && response.usage && (
               <div className="mt-3 pt-3 border-t border-border">

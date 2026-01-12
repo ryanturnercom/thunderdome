@@ -16,12 +16,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, Loader2 } from "lucide-react";
 import { SelectedModel } from "@/types/models";
+import { SavedResponse } from "@/types/config";
 import { toast } from "sonner";
 
 interface SaveConfigDialogProps {
   systemPrompt: string;
   userPrompt: string;
   models: SelectedModel[];
+  responses?: SavedResponse[];
+  evaluation?: string | null;
   disabled?: boolean;
 }
 
@@ -29,6 +32,8 @@ export function SaveConfigDialog({
   systemPrompt,
   userPrompt,
   models,
+  responses,
+  evaluation,
   disabled,
 }: SaveConfigDialogProps) {
   const [open, setOpen] = useState(false);
@@ -56,6 +61,8 @@ export function SaveConfigDialog({
           systemPrompt,
           userPrompt,
           models,
+          responses: responses && responses.length > 0 ? responses : undefined,
+          evaluation: evaluation || undefined,
         }),
       });
 
@@ -77,6 +84,9 @@ export function SaveConfigDialog({
     }
   };
 
+  const responseCount = responses?.length ?? 0;
+  const hasEvaluation = !!evaluation;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -91,7 +101,7 @@ export function SaveConfigDialog({
             SAVE CONFIGURATION
           </DialogTitle>
           <DialogDescription>
-            Save your current prompt and model configuration for later use.
+            Save your current prompt, model configuration, and results for later use.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -120,6 +130,16 @@ export function SaveConfigDialog({
               <li>System prompt ({systemPrompt.length} chars)</li>
               <li>User prompt ({userPrompt.length} chars)</li>
               <li>{models.length} selected model(s)</li>
+              {responseCount > 0 && (
+                <li className="text-green-600 dark:text-green-400">
+                  {responseCount} model response(s)
+                </li>
+              )}
+              {hasEvaluation && (
+                <li className="text-green-600 dark:text-green-400">
+                  Evaluation result
+                </li>
+              )}
             </ul>
           </div>
         </div>

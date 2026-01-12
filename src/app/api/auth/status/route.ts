@@ -7,12 +7,13 @@ export async function GET() {
 
     return NextResponse.json({
       isAuthenticated: session.isAuthenticated,
+      isGuest: session.isGuest || false,
       authenticatedAt: session.authenticatedAt,
     });
   } catch (error) {
     console.error("Status check error:", error);
     return NextResponse.json(
-      { isAuthenticated: false },
+      { isAuthenticated: false, isGuest: false },
       { status: 500 }
     );
   }

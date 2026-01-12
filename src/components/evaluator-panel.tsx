@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
-import { ModelResponse } from "@/hooks/use-execution";
+import { useArena, ModelResponse } from "@/contexts/arena-context";
 
 interface EvaluatorPanelProps {
   responses: Map<string, ModelResponse>;
@@ -19,7 +19,7 @@ export function EvaluatorPanel({
   userPrompt,
   allComplete,
 }: EvaluatorPanelProps) {
-  const [evaluation, setEvaluation] = useState<string | null>(null);
+  const { evaluation, setEvaluation } = useArena();
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

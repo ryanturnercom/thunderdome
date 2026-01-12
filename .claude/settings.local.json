@@ -3,7 +3,14 @@
     "allow": [
       "WebSearch",
       "WebFetch(domain:ai.google.dev)",
-      "WebFetch(domain:docs.anthropic.com)"
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(npm run build:*)",
+      "Bash(git rev-parse:*)",
+      "mcp__github__get_me",
+      "mcp__github__create_repository",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

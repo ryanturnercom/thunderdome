@@ -19,6 +19,7 @@ export interface GoogleStreamOptions {
   model: string;
   systemPrompt: string;
   userPrompt: string;
+  maxTokens: number | null; // null uses default
   onChunk: (content: string) => void;
   onDone: (usage: { promptTokens: number; completionTokens: number; totalTokens: number }) => void;
   onError: (error: Error) => void;
@@ -28,6 +29,7 @@ export async function streamGoogleResponse({
   model,
   systemPrompt,
   userPrompt,
+  maxTokens,
   onChunk,
   onDone,
   onError,
@@ -41,7 +43,10 @@ export async function streamGoogleResponse({
   try {
     const generativeModel = client.getGenerativeModel({
       model,
-      systemInstruction: systemPrompt,
+      ...(systemPrompt && { systemInstruction: systemPrompt }),
+      generationConfig: {
+        ...(maxTokens !== null && { maxOutputTokens: maxTokens }),
+      },
     });
 
     const result = await generativeModel.generateContentStream(userPrompt);
