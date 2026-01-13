@@ -4,12 +4,40 @@ import { AVAILABLE_MODELS, ExecutionRequest, StreamChunk } from "@/types/models"
 import { streamOpenAIResponse } from "@/lib/clients/openai";
 import { streamAnthropicResponse } from "@/lib/clients/anthropic";
 import { streamGoogleResponse } from "@/lib/clients/google";
+import {
+  getClientIP,
+  getIPExecutionCount,
+  incrementIPExecutionCount,
+  isGuestLimitExceeded,
+  GUEST_EXECUTION_LIMIT,
+} from "@/lib/guest-rate-limit";
 
 export async function POST(request: NextRequest) {
   // Verify authentication
   const session = await getSession();
   if (!session.isAuthenticated) {
     return new Response("Unauthorized", { status: 401 });
+  }
+
+  // Check guest execution limit
+  if (session.isGuest) {
+    const clientIP = getClientIP(request);
+    const sessionCount = session.guestExecutionCount || 0;
+    const ipCount = getIPExecutionCount(clientIP);
+
+    if (isGuestLimitExceeded(sessionCount, ipCount)) {
+      return new Response(
+        JSON.stringify({
+          error: "Guest limit reached",
+          message: `You have reached the limit of ${GUEST_EXECUTION_LIMIT} executions as a guest. Please log in to continue.`,
+          isGuestLimitError: true,
+        }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
   }
 
   // Parse request body
@@ -130,6 +158,14 @@ export async function POST(request: NextRequest) {
         });
 
         completionPromises.push(promise);
+      }
+
+      // Increment guest execution counts (do this BEFORE waiting for completion)
+      if (session.isGuest) {
+        const clientIP = getClientIP(request);
+        session.guestExecutionCount = (session.guestExecutionCount || 0) + 1;
+        await session.save();
+        incrementIPExecutionCount(clientIP);
       }
 
       // Wait for all models to complete
