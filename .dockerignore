@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment files (pass via docker run -e or docker-compose)
+.env
+.env.local
+.env.development
+.env.production
+
+# Documentation
+*.md
+docs/
+
+# Tests
+*.test.*
+*.spec.*
+__tests__
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# Claude temp files
+tmpclaude-*
+.claude/
+
+# Playwright
+.playwright-mcp/
