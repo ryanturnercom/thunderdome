@@ -4,7 +4,7 @@ import { SessionData } from "@/types/auth";
 import { sessionOptions } from "@/lib/session";
 
 // Routes that don't require authentication
-const publicRoutes = ["/login", "/api/auth/login"];
+const publicRoutes = ["/login", "/api/auth/login", "/api/auth/guest", "/api/auth/status", "/api/auth/logout", "/api/auth/guest-status"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
