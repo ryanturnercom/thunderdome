@@ -34,9 +34,9 @@ export function Arena() {
   } = useArena();
 
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { isGuest } = useAuth();
+  const { isGuest, guestExecutionsRemaining, guestLimitReached, refreshGuestStatus } = useAuth();
 
-  const canExecute = isValid && hasModels && !isExecuting && !isGuest;
+  const canExecute = isValid && hasModels && !isExecuting && !guestLimitReached;
 
   const execute = useCallback(async () => {
     // Play sound on execute
@@ -74,7 +74,18 @@ export function Arena() {
         signal: abortControllerRef.current.signal,
       });
 
-      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+      if (!response.ok) {
+        // Handle 429 (guest limit reached) specially
+        if (response.status === 429) {
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.isGuestLimitError) {
+            // Refresh guest status to update UI
+            await refreshGuestStatus();
+            throw new Error(errorData.message || "Guest execution limit reached. Please log in to continue.");
+          }
+        }
+        throw new Error(`HTTP error: ${response.status}`);
+      }
       if (!response.body) throw new Error("No response body");
 
       const reader = response.body.getReader();
@@ -147,8 +158,12 @@ export function Arena() {
     } finally {
       setIsExecuting(false);
       abortControllerRef.current = null;
+      // Refresh guest status to update remaining executions count
+      if (isGuest) {
+        refreshGuestStatus();
+      }
     }
-  }, [prompts, selectedModels, setIsExecuting, setResponses, setEvaluation]);
+  }, [prompts, selectedModels, setIsExecuting, setResponses, setEvaluation, isGuest, refreshGuestStatus]);
 
   const handleReset = () => {
     if (abortControllerRef.current) {
@@ -224,6 +239,29 @@ export function Arena() {
           )}
         </Button>
       </div>
+
+      {/* Guest execution limit feedback */}
+      {isGuest && (
+        <div className="flex justify-center">
+          {guestLimitReached ? (
+            <div className="text-center">
+              <p className="text-destructive font-medium">
+                Guest limit reached. Please log in to continue.
+              </p>
+              <a
+                href="/login"
+                className="text-sm text-primary hover:underline"
+              >
+                Go to login
+              </a>
+            </div>
+          ) : guestExecutionsRemaining !== null && (
+            <p className={`text-sm ${guestExecutionsRemaining <= 2 ? "text-yellow-500" : "text-muted-foreground"}`}>
+              {guestExecutionsRemaining} of 5 executions remaining
+            </p>
+          )}
+        </div>
+      )}
 
       {hasResponses && (
         <>
