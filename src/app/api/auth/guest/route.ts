@@ -7,6 +7,7 @@ export async function POST() {
     session.isAuthenticated = true;
     session.isGuest = true;
     session.authenticatedAt = Date.now();
+    session.guestExecutionCount = 0;
     await session.save();
 
     return NextResponse.json({ success: true, isGuest: true });
