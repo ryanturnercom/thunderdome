@@ -6,9 +6,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isGuest: boolean;
   isLoading: boolean;
+  guestExecutionsRemaining: number | null;
+  guestLimitReached: boolean;
   checkAuth: () => Promise<void>;
   loginAsGuest: () => Promise<boolean>;
   logout: () => Promise<void>;
+  refreshGuestStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +20,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [guestExecutionsRemaining, setGuestExecutionsRemaining] = useState<number | null>(null);
+  const [guestLimitReached, setGuestLimitReached] = useState(false);
+
+  async function refreshGuestStatus(authenticated = isAuthenticated, guest = isGuest) {
+    if (!authenticated || !guest) {
+      setGuestExecutionsRemaining(null);
+      setGuestLimitReached(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/guest-status");
+      if (response.ok) {
+        const data = await response.json();
+        setGuestExecutionsRemaining(data.executionsRemaining);
+        setGuestLimitReached(data.limitReached);
+      }
+    } catch (error) {
+      console.error("Failed to fetch guest status:", error);
+    }
+  }
 
   async function checkAuth() {
     try {
@@ -38,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         setIsAuthenticated(true);
         setIsGuest(true);
+        await refreshGuestStatus(true, true);
         return true;
       }
       return false;
@@ -62,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isGuest, isLoading, checkAuth, loginAsGuest, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isGuest, isLoading, guestExecutionsRemaining, guestLimitReached, checkAuth, loginAsGuest, logout, refreshGuestStatus }}>
       {children}
     </AuthContext.Provider>
   );
