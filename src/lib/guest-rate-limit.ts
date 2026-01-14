@@ -3,29 +3,46 @@
 
 import { NextRequest } from "next/server";
 
-export const GUEST_EXECUTION_LIMIT = 5;
-export const IP_STORE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+// Get limit from environment variable, default to 20 executions per day
+export function getGuestExecutionLimit(): number {
+  const envLimit = process.env.GUEST_DAILY_EXECUTION_LIMIT;
+  if (envLimit) {
+    const parsed = parseInt(envLimit, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+  return 20; // Default limit
+}
+
+// For backwards compatibility - computed at runtime
+export const GUEST_EXECUTION_LIMIT = getGuestExecutionLimit();
+
+// Get the current date string (YYYY-MM-DD) for daily tracking
+export function getCurrentDateString(): string {
+  return new Date().toISOString().split("T")[0];
+}
 
 export interface IPRecord {
   count: number;
-  firstSeen: number;
+  date: string; // Track the date for daily reset
 }
 
 // In-memory store - for production, consider Redis
 const ipStore = new Map<string, IPRecord>();
 
-// Cleanup expired entries periodically
-function cleanupExpiredEntries() {
-  const now = Date.now();
+// Cleanup entries from previous days
+function cleanupOldEntries() {
+  const today = getCurrentDateString();
   for (const [ip, record] of ipStore.entries()) {
-    if (now - record.firstSeen > IP_STORE_TTL_MS) {
+    if (record.date !== today) {
       ipStore.delete(ip);
     }
   }
 }
 
 // Run cleanup every hour
-setInterval(cleanupExpiredEntries, 60 * 60 * 1000);
+setInterval(cleanupOldEntries, 60 * 60 * 1000);
 
 export function getClientIP(request: NextRequest): string {
   // Check common headers for real IP (behind proxy/load balancer)
@@ -48,8 +65,9 @@ export function getIPExecutionCount(ip: string): number {
   const record = ipStore.get(ip);
   if (!record) return 0;
 
-  // Check if expired
-  if (Date.now() - record.firstSeen > IP_STORE_TTL_MS) {
+  // Reset if it's a new day
+  const today = getCurrentDateString();
+  if (record.date !== today) {
     ipStore.delete(ip);
     return 0;
   }
@@ -58,15 +76,16 @@ export function getIPExecutionCount(ip: string): number {
 }
 
 export function incrementIPExecutionCount(ip: string): number {
+  const today = getCurrentDateString();
   const existing = ipStore.get(ip);
 
-  if (existing && Date.now() - existing.firstSeen <= IP_STORE_TTL_MS) {
+  if (existing && existing.date === today) {
     existing.count += 1;
     return existing.count;
   }
 
-  // New record or expired
-  ipStore.set(ip, { count: 1, firstSeen: Date.now() });
+  // New record or new day - start fresh
+  ipStore.set(ip, { count: 1, date: today });
   return 1;
 }
 

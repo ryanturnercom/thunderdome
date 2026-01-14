@@ -34,7 +34,7 @@ export function Arena() {
   } = useArena();
 
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { isGuest, guestExecutionsRemaining, guestLimitReached, refreshGuestStatus } = useAuth();
+  const { isGuest, guestExecutionsRemaining, guestExecutionLimit, guestLimitReached, refreshGuestStatus } = useAuth();
 
   const canExecute = isValid && hasModels && !isExecuting && !guestLimitReached;
 
@@ -246,7 +246,7 @@ export function Arena() {
           {guestLimitReached ? (
             <div className="text-center">
               <p className="text-destructive font-medium">
-                Guest limit reached. Please log in to continue.
+                Daily guest limit reached. Please log in to continue or try again tomorrow.
               </p>
               <a
                 href="/login"
@@ -255,9 +255,9 @@ export function Arena() {
                 Go to login
               </a>
             </div>
-          ) : guestExecutionsRemaining !== null && (
+          ) : guestExecutionsRemaining !== null && guestExecutionLimit !== null && (
             <p className={`text-sm ${guestExecutionsRemaining <= 2 ? "text-yellow-500" : "text-muted-foreground"}`}>
-              {guestExecutionsRemaining} of 5 executions remaining
+              {guestExecutionsRemaining} of {guestExecutionLimit} daily executions remaining
             </p>
           )}
         </div>

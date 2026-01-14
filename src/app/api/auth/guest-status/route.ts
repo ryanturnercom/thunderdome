@@ -5,6 +5,7 @@ import {
   getIPExecutionCount,
   getRemainingExecutions,
   GUEST_EXECUTION_LIMIT,
+  getCurrentDateString,
 } from "@/lib/guest-rate-limit";
 
 export async function GET(request: NextRequest) {
@@ -24,7 +25,14 @@ export async function GET(request: NextRequest) {
     }
 
     const clientIP = getClientIP(request);
-    const sessionCount = session.guestExecutionCount || 0;
+    const today = getCurrentDateString();
+
+    // Reset session count if it's a new day
+    let sessionCount = session.guestExecutionCount || 0;
+    if (session.guestExecutionDate !== today) {
+      sessionCount = 0;
+    }
+
     const ipCount = getIPExecutionCount(clientIP);
     const remaining = getRemainingExecutions(sessionCount, ipCount);
 
@@ -35,6 +43,7 @@ export async function GET(request: NextRequest) {
       executionsUsed: Math.max(sessionCount, ipCount),
       executionsRemaining: remaining,
       limitReached: remaining === 0,
+      resetsDaily: true,
     });
   } catch (error) {
     console.error("Guest status error:", error);

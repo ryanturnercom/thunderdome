@@ -10,6 +10,7 @@ import {
   incrementIPExecutionCount,
   isGuestLimitExceeded,
   GUEST_EXECUTION_LIMIT,
+  getCurrentDateString,
 } from "@/lib/guest-rate-limit";
 
 export async function POST(request: NextRequest) {
@@ -22,14 +23,24 @@ export async function POST(request: NextRequest) {
   // Check guest execution limit
   if (session.isGuest) {
     const clientIP = getClientIP(request);
-    const sessionCount = session.guestExecutionCount || 0;
+    const today = getCurrentDateString();
+
+    // Reset session count if it's a new day
+    let sessionCount = session.guestExecutionCount || 0;
+    if (session.guestExecutionDate !== today) {
+      sessionCount = 0;
+      session.guestExecutionCount = 0;
+      session.guestExecutionDate = today;
+      await session.save();
+    }
+
     const ipCount = getIPExecutionCount(clientIP);
 
     if (isGuestLimitExceeded(sessionCount, ipCount)) {
       return new Response(
         JSON.stringify({
           error: "Guest limit reached",
-          message: `You have reached the limit of ${GUEST_EXECUTION_LIMIT} executions as a guest. Please log in to continue.`,
+          message: `You have reached your daily limit of ${GUEST_EXECUTION_LIMIT} executions as a guest. Please log in to continue or try again tomorrow.`,
           isGuestLimitError: true,
         }),
         {
@@ -163,7 +174,9 @@ export async function POST(request: NextRequest) {
       // Increment guest execution counts (do this BEFORE waiting for completion)
       if (session.isGuest) {
         const clientIP = getClientIP(request);
+        const today = getCurrentDateString();
         session.guestExecutionCount = (session.guestExecutionCount || 0) + 1;
+        session.guestExecutionDate = today;
         await session.save();
         incrementIPExecutionCount(clientIP);
       }

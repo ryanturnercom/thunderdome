@@ -7,6 +7,7 @@ interface AuthContextType {
   isGuest: boolean;
   isLoading: boolean;
   guestExecutionsRemaining: number | null;
+  guestExecutionLimit: number | null;
   guestLimitReached: boolean;
   checkAuth: () => Promise<void>;
   loginAsGuest: () => Promise<boolean>;
@@ -21,11 +22,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [guestExecutionsRemaining, setGuestExecutionsRemaining] = useState<number | null>(null);
+  const [guestExecutionLimit, setGuestExecutionLimit] = useState<number | null>(null);
   const [guestLimitReached, setGuestLimitReached] = useState(false);
 
   async function refreshGuestStatus(authenticated = isAuthenticated, guest = isGuest) {
     if (!authenticated || !guest) {
       setGuestExecutionsRemaining(null);
+      setGuestExecutionLimit(null);
       setGuestLimitReached(false);
       return;
     }
@@ -35,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         setGuestExecutionsRemaining(data.executionsRemaining);
+        setGuestExecutionLimit(data.executionLimit);
         setGuestLimitReached(data.limitReached);
       }
     } catch (error) {
@@ -87,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isGuest, isLoading, guestExecutionsRemaining, guestLimitReached, checkAuth, loginAsGuest, logout, refreshGuestStatus }}>
+    <AuthContext.Provider value={{ isAuthenticated, isGuest, isLoading, guestExecutionsRemaining, guestExecutionLimit, guestLimitReached, checkAuth, loginAsGuest, logout, refreshGuestStatus }}>
       {children}
     </AuthContext.Provider>
   );
