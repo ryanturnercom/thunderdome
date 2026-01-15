@@ -25,6 +25,28 @@ An internal web app for prompt engineers to run prompts against multiple LLMs in
 
 5. Open http://localhost:3000
 
+## Docker Setup
+
+1. Build the image:
+   ```bash
+   docker build -t thunderdome .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -d --name thunderdome --restart unless-stopped -p 3000:3000 --env-file .env thunderdome
+   ```
+
+3. Open http://localhost:3000
+
+**Useful commands:**
+```bash
+docker ps                      # See running containers
+docker logs thunderdome        # View logs
+docker stop thunderdome        # Stop the container
+docker start thunderdome       # Start it again
+```
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
@@ -38,6 +60,7 @@ An internal web app for prompt engineers to run prompts against multiple LLMs in
 |----------|----------|-------------|
 | AUTH_PASSWORD | Yes | Shared password for access |
 | SESSION_SECRET | Yes | 32+ character secret for sessions |
+| GUEST_DAILY_EXECUTION_LIMIT | No | Daily execution limit for guests (default: 20) |
 | OPENAI_API_KEY | No* | OpenAI API key |
 | ANTHROPIC_API_KEY | No* | Anthropic API key |
 | GOOGLE_AI_API_KEY | No* | Google AI API key |
