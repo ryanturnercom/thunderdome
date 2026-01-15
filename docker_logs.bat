@@ -1,0 +1,3 @@
+@echo off
+echo Showing thunderdome logs (Ctrl+C to exit)...
+docker logs -f thunderdome
