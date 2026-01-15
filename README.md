@@ -47,6 +47,15 @@ docker stop thunderdome        # Stop the container
 docker start thunderdome       # Start it again
 ```
 
+**Updating to a new version:**
+```bash
+git pull
+docker stop thunderdome
+docker rm thunderdome
+docker build -t thunderdome .
+docker run -d --name thunderdome --restart unless-stopped -p 3000:3000 --env-file .env thunderdome
+```
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
